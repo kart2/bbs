@@ -249,7 +249,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when filtering by volume mount driver", func() {
 			FIt("returns LRPs that have a volume mount with matching driver", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{VolumeMountDriver: "my-driver"})
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{AppGuids: []string{"app-1", "app-3"}})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(desiredLRPs).To(HaveLen(1))
@@ -258,7 +258,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			FIt("finds LRPs with matching driver among multiple volume mounts", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{VolumeMountDriver: "third-driver"})
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{AppGuids: []string{"app-1", "app-3"}})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(desiredLRPs).To(HaveLen(1))
@@ -267,14 +267,14 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("returns empty list when no LRPs have matching volume mount driver", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{VolumeMountDriver: "non-existent-driver"})
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{AppGuids: []string{"app-1", "app-3"}})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(desiredLRPs).To(HaveLen(0))
 			})
 
 			It("excludes LRPs with no volume mounts", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{VolumeMountDriver: "test-driver"})
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{AppGuids: []string{"app-1", "app-3"}})
 				Expect(err).NotTo(HaveOccurred())
 
 				processGuids := make([]string, len(desiredLRPs))
@@ -286,8 +286,8 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			It("can combine volume mount driver filter with domain filter", func() {
 				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{
-					Domain:            "domain-1",
-					VolumeMountDriver: "my-driver",
+					Domain:   "domain-1",
+					AppGuids: []string{"my-driver"},
 				})
 				Expect(err).NotTo(HaveOccurred())
 

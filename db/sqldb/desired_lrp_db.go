@@ -119,15 +119,19 @@ func (db *SQLDB) DesiredLRPs(ctx context.Context, logger lager.Logger, filter mo
 
 	var wheres []string
 	var values []interface{}
+	joinOp := "AND"
 
 	if filter.Domain != "" {
 		wheres = append(wheres, "domain = ?")
 		values = append(values, filter.Domain)
 	}
 
-	if filter.VolumeMountDriver != "" {
-		wheres = append(wheres, "run_info LIKE ?")
-		values = append(values, "%\"Driver\"%\"%"+filter.VolumeMountDriver+"\"%")
+	if len(filter.AppGuids) > 0 {
+		for _, g := range filter.AppGuids {
+			wheres = append(wheres, "process_guid LIKE ?")
+			values = append(values, g+"%")
+		}
+		joinOp = "OR"
 	}
 
 	if len(filter.ProcessGuids) > 0 {
@@ -143,7 +147,7 @@ func (db *SQLDB) DesiredLRPs(ctx context.Context, logger lager.Logger, filter mo
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		rows, err := db.all(ctx, logger, tx, desiredLRPsTable,
 			desiredLRPColumns, helpers.NoLockRow,
-			strings.Join(wheres, " AND "), values...,
+			strings.Join(wheres, " "+joinOp+" "), values...,
 		)
 		if err != nil {
 			logger.Error("failed-query", err)
